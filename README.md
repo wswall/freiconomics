@@ -1,0 +1,1 @@
+Assorted models developed alongside M.Sc. Economics program at Universität Freiburg. All code is developed personally. Docstrings are created with AI assistance.
