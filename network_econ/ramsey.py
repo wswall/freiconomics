@@ -26,7 +26,7 @@ def _get_var(function: Expr, var: str) -> Symbol:
 
 class DemandFunction:
     """
-    Represent a firm's demand function.
+    Represent the demand function for a single good.
 
     Stores a sympy expression representing the demand function with convenience methods
     for solving in terms of price or quantity and calculating consumer surplus. By default,
