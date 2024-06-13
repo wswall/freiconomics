@@ -93,7 +93,7 @@ class Player:
         return dominated_strategies
 
 
-class Game:
+class StrategicGame:
     """
     Represents a game with players and strategies.
 
@@ -165,7 +165,7 @@ class Game:
         self._update_strategies()
 
 
-def generate_game(low: int, high: int, size: tuple[int, int, int]) -> Game:
+def generate_game(low: int, high: int, size: tuple[int, int, int]) -> StrategicGame:
     """
     Generate a game with random payout matrix.
 
@@ -186,10 +186,10 @@ def generate_game(low: int, high: int, size: tuple[int, int, int]) -> Game:
         index=list(digits[:payout_matrix.shape[0]]),
         columns=list(ascii_letters[:payout_matrix.shape[1]])
     )
-    return Game(df)
+    return StrategicGame(df)
 
 
-EliminationResults = List[tuple[Game, List[str]]]
+EliminationResults = List[tuple[StrategicGame, List[str]]]
 ResultDict = Mapping[tuple[str], Mapping[str, List[str]]]
 
 
@@ -219,7 +219,7 @@ def prep_result_dict(elimination_results: EliminationResults) -> ResultDict:
 
 
 def iterative_elimination(
-    game: Game, elimination_path: List[str] | None = None
+    game: StrategicGame, elimination_path: List[str] | None = None
 ) -> EliminationResults:
     """
     Performs iterative elimination of dominated strategies in a game.

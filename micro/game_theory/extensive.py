@@ -1,3 +1,5 @@
+from copy import deepcopy
+from collections import defaultdict
 import os
 
 import matplotlib.pyplot as plt
@@ -22,6 +24,9 @@ class Node:
         self.name = name or id(self)
         self.payout = payout
 
+    def update_payout(self, payout):
+        self.payout = payout
+
     def get_history(self):
         return list(reversed(_get_node_history(self)))
 
@@ -35,9 +40,9 @@ class Node:
         return f"Node {self.name}"
 
 
-class Game:
+class ExtensiveGame:
     def __init__(self, n_players, assign_id="len"):
-        self.N = n_players
+        self.players = list(range(n_players))
         self.assign_id = assign_id
         self.tree = nx.Graph()
         self.tree.add_node(0, data=Node(1, name="root"))
@@ -62,6 +67,8 @@ class Game:
         return new_node
 
     def _get_node_list(self):
+        if len(self.tree.nodes) == 1:
+            return self.tree.nodes
         return [
             node
             for node, data in self.tree.nodes.items()
@@ -84,6 +91,29 @@ class Game:
     def _generate_pos(self):
         layout = nx.nx_pydot.pydot_layout(self.tree, prog="dot")
         return {int(x): y for x, y in layout.items()}
+
+    def get_terminal_nodes(self):
+        return [d['data'] for d in self.tree.nodes.values() if d['data'].is_terminal()]
+
+    @staticmethod
+    def _get_parent_payouts(terminal_nodes):
+        parents = defaultdict(list)
+        for node in terminal_nodes:
+            parents[node.parent_node].append(node.payout)
+        return parents
+
+    def _update_parent_payouts(self, terminal_nodes):
+        parent_payouts = self._get_parent_payouts(terminal_nodes)
+        for parent, payouts in parent_payouts.items():
+            parent.update_payout(max(payouts, key=lambda x: x[parent.player - 1]))
+
+    def backwards_induction_solve(self):
+        extensive_game = deepcopy(self)
+        while len(extensive_game.tree.nodes) > 1:
+            terminal_nodes = self.get_terminal_nodes()
+            self._update_parent_payouts(terminal_nodes)
+            extensive_game.tree.remove_nodes_from([node.name for node in terminal_nodes])
+        return extensive_game.tree.nodes[0]['data'].payout
 
     def plot(self):
         plt.figure()
