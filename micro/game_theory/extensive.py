@@ -15,6 +15,19 @@ StrategySequence = Sequence[Tuple[Any, Any]]
 
 @dataclass
 class Node:
+    """
+    Dataclass for representing nodes in extensive form games.
+
+    Attributes:
+        name (str | int): The name/identifier of the node.
+        history (list[str]): The sequence of actions leading to this
+            node.
+        player (str | int | None, optional): The player associated with
+            this node. Defaults to None.
+        payout (list[int] | None, optional): The payout values
+            associated with this node. This attribute should be None
+            for all non-terminal nodes. Defaults to None.
+    """
     name: str | int
     history: list[str]
     player: str | int | None = None
@@ -44,6 +57,23 @@ class Strategy:
 
 
 class ExtensiveGame:
+    """
+    Represents an extensive form game.
+
+    The class is instantiated with an empty game tree. First the root
+    node must be set using the .set_root() method, passing the player
+    making the first move in the game. The remainder of the tree can
+    then be built by adding terminal nodes. A terminal node is added by
+    using the .add_terminal_node() method, passing a sequence of player,
+    action tuples and the payout associated with that set of actions.
+    Multiple terminal nodes can be added together by passing them as a
+    list to the .add_terminal_nodes() method. The game tree can be
+    visualized with the .plot() method.
+
+    Attributes:
+        tree (nx.Graph): A networkx graph representing the game tree.
+    """
+
     def __init__(self):
         self.tree = nx.Graph()
         self._nodes = {}
@@ -119,9 +149,9 @@ class ExtensiveGame:
         created linking it to its parent node.
 
         Args:
-            strategy (StrategySequence): A sequence of player, action 
+            strategy (StrategySequence): A sequence of player, action
                 tuples representing a complete game.
-            payout (Sequence[Any]): The payout associated with the 
+            payout (Sequence[Any]): The payout associated with the
                 terminal node.
 
         Returns:
@@ -153,9 +183,9 @@ class ExtensiveGame:
         node.
 
         Args:
-            strategy (StrategySequence): A sequence of player, action 
+            strategy (StrategySequence): A sequence of player, action
                 tuples representing a complete game.
-            payout (Sequence[Any]): The payout associated with the 
+            payout (Sequence[Any]): The payout associated with the
                 terminal node.
 
         Returns:
