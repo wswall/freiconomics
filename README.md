@@ -10,5 +10,6 @@ Assorted models developed alongside M.Sc. Economics program at Universität Frei
   * `models/bnc.py`: a class for simulating a basic new classical model
   * `models/monetary.py`: a class for simulating monetary dynamics under different policy scenarios
   * `bnc_dash`: script for running a plotly dashboard to visualize the basic new classical model
+  * `bnc_dash`: script for running a plotly dashboard to visualize monetary dynamics
   * `prod_and_utility.py`: a script for generating plots to demonstrate effects of changing parameters on production, utility from consumption, and disutility from labor in a basic new classical model 
   * `fred.py`: functions for retrieving data from FRED API
