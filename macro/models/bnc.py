@@ -34,7 +34,8 @@ class Bnc:
 
     def _calc_eq_labor(self):
         h_t = self.functions.tfp * self._l_prime() * self._v_prime() + self._h_prime()
-        return solve(Eq(h_t, 0), labor)[0]
+        # fails to solve without simplifying first
+        return solve(Eq(h_t.simplify(), 0), labor)[0]
 
     def _get_eq_functions(self, param_dict):
         output = self.functions.tfp * self.functions.labor_function.subs(labor, self.eq_labor)
