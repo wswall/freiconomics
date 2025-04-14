@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 import pandas as pd
+import numpy as np
 
 
 Params = namedtuple(
@@ -92,20 +93,21 @@ class MonetaryDynamics:
         )
 
     def calc_i_series(self, pi_series):
+        pi_diff = pi_series - self.params.pi_target
         return (
             (1 + self.r_star) * (1 + self.params.pi_target)
-            - 1
-            + self.params.phi_pi * (pi_series - self.params.pi_target)
+            - 1 + self.params.phi_pi * pi_diff
         )
 
     def calc_T_series(self, Y_series, B_series, B_init):
-        B_series = pd.concat(B_init, B_series)[:-1]
+        B_series = np.array([B_init, *B_series.values])[:-1]
         return self.params.tau * Y_series + self.params.phi_b * B_series
 
     def simulate(self, periods, i_init=0.05, b_init=1.18, y_init=67632):
         history = pd.DataFrame(index=range(periods), columns=["Y", "pi", "b", "B"])
         y = self.calc_y(y_init)
-        pi, b = self.calc_pi_0(b_init, i_init), self.calc_b_0(b_init, i_init)
+        pi = self.calc_pi_0(b_init, i_init)
+        b = self.calc_b_0(b_init, i_init)
         for period in range(periods):
             history.loc[period] = [y, pi, b, b * y]
             y = self.calc_y(y)
@@ -114,7 +116,7 @@ class MonetaryDynamics:
         history["i"] = self.calc_i_series(history["pi"])
         history["B"] = history["b"] * history["Y"]
         history["G"] = history["Y"] * self.params.eta
-        history.loc["T"] = self.calc_T_series(
+        history["T"] = self.calc_T_series(
             history["Y"], history["B"], b_init * y_init
         )
         history["s_f"] = (history["T"] - history["G"]) / history["Y"]

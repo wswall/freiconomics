@@ -9,8 +9,8 @@ from models.monetary import MonetaryDynamics, Params
 BOOTSTRAP = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
 
 
-def generate_slider(variable, start=0.1, stop=1, step=0.1, value=0.5):
-    return dcc.Slider(
+def generate_slider(variable, start=0.1, stop=1, step=0.1, value=0.5, label=None):
+    slider = dcc.Slider(
         start,
         stop,
         step,
@@ -20,24 +20,22 @@ def generate_slider(variable, start=0.1, stop=1, step=0.1, value=0.5):
         marks=None,
         updatemode="drag",
     )
-
-
-def generate_slider_div(symbol, slider):
-    label = dcc.Markdown(f"$\\{symbol}$", mathjax=True)
+    label = label or f"${variable}$"
+    md = dcc.Markdown(label, mathjax=True)
     return html.Div(
-        children=[
-            html.Div(label, className="col-2"),
-            html.Div(slider, className="col-10"),
-        ],
-        className="row",
+            children=[
+                html.Div(md, className="col-2"),
+                html.Div(slider, className="col-10"),
+            ],
+            className="row",
     )
 
 
-def generate_slider_group(class_name, sliders):
+def generate_slider_group(class_name, slider_dict):
     children = []
-    for slider in sliders:
-        slider_obj = generate_slider(slider, **sliders[slider])
-        children.append(generate_slider_div(slider, slider_obj))
+    for variable in slider_dict:
+        slider = generate_slider(variable, **slider_dict[variable])
+        children.append(slider)
     return html.Div(children=children, className=class_name)
 
 
@@ -58,22 +56,20 @@ def generate_scatter(table, column):
 
 nominal_plot = generate_plot("nominal")
 real_plot = generate_plot("real")
+plots = html.Div(children=[nominal_plot, real_plot], className="col-md-8")
 slider_definitions = {
-    "eta": {"value": 0.35, "start":0.3498, "stop": 0.3504, "step":0.00001},
-    "tau": {"value": 0.3502, "start":0.3498, "stop":0.3504, "step":0.00001},
-    "pi_target": {"value": 0.02, "start":0,"stop":0.1, "step":0.005},
-    "phi_pi": {"value": 0.9, "start": 0.7, "stop": 0.99, "step": .05},
-    "phi_b": {"value": .001, "start": 0,"stop": 0.5, "step": .001},
-    "g": {"value": 0.02, "start": 0,"stop":0.2, "step": 0.01},
-    "beta": {"value": 0.9988, "start": 0.998, "stop": 1, "step": 0.0001}
+    "eta": {"value": 0.35, "start":0.3498, "stop": 0.3504, "step":0.00001, "label":"$\\eta$"},
+    "tau": {"value": 0.3502, "start":0.3498, "stop":0.3504, "step":0.00001, "label":"$\\tau$"},
+    "pi_target": {"value": 0.02, "start":0,"stop":0.1, "step":0.005, "label":"$\\pi_{target}$"},
+    "phi_pi": {"value": 0.9, "start": 0.7, "stop": 0.99, "step": .05, "label":"$\\phi_\\pi$"},
+    "phi_b": {"value": .001, "start": 0,"stop": 0.05, "step": .001, "label":"$\\phi_b$"},
+    "g": {"value": 0.02, "start": 0,"stop":0.2, "step": 0.01, "label":"$g$"},
+    "beta": {"value": 0.9988, "start": 0.998, "stop": 1, "step": 0.0001, "label":"$\\beta$"}
 }
-content = html.Div(
-    children=[
-        html.Div(children=[nominal_plot, real_plot], className="col-md-8"),
-        generate_slider_group('col-md-4', slider_definitions)
-    ],
-    className="row",
-)
+sliders = generate_slider_group('row', slider_definitions)
+policy_div = html.Div(id="policy", className="row")
+info = html.Div(children=[sliders, policy_div], className="col-md-4")
+content = html.Div(children=[plots, info],className="row")
 
 body = html.Div(children=content, className="row", style={"padding-top": "50px"})
 app = dash.Dash(__name__, external_stylesheets=[BOOTSTRAP])
@@ -83,7 +79,8 @@ app.layout = html.Div(children=[body], className="container")
 @app.callback(
     [
         Output("nominal", "figure"),
-        Output("real", "figure")
+        Output("real", "figure"),
+        Output("policy", "children")
     ],
     [
         Input("eta-slider", "value"),
@@ -96,13 +93,15 @@ app.layout = html.Div(children=[body], className="container")
     ],
 )
 def update_outputs(eta, tau, pi_target, phi_pi, phi_b, g, beta):
-    model = MonetaryDynamics(Params(eta, tau, pi_target, phi_pi, phi_b, g, beta))
+    try:
+        model = MonetaryDynamics(Params(eta, tau, pi_target, phi_pi, phi_b, g, beta))
+    except ValueError as e:
+        return go.Figure(), go.Figure(), [html.P(f"Error: {e.args[0]}")]
     history = model.simulate(101)
-
     nominal = go.Figure(
         data=[
-            generate_scatter(history, "Y"), 
-            generate_scatter(history, "B"), 
+            generate_scatter(history, "Y"),
+            generate_scatter(history, "B"),
             generate_scatter(history, "G"),
             generate_scatter(history, "T"),
         ]
@@ -131,8 +130,15 @@ def update_outputs(eta, tau, pi_target, phi_pi, phi_b, g, beta):
         xaxis_range=[0, 100],
         yaxis_range=[0, 1],
     )
-
-    return nominal, real
+    policies = {
+        "monetary":"active" if model.monetary_active() else "passive", 
+        "fiscal": "Non-Ricardian" if model.fiscal_active() else "Ricardian"
+    }
+    policy = [
+        html.P(f"Monetary Policy: {policies['monetary']}"),
+        html.P(f"Fiscal Policy: {policies['fiscal']}")
+    ]
+    return nominal, real, policy
 
 
 if __name__ == "__main__":
