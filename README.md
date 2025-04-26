@@ -7,9 +7,9 @@ Assorted models developed alongside M.Sc. Economics program at Universität Frei
   * `ramsey.py`: classes and functions for solving Ramsey problems
   * `congestion.py`: class for solving congestion pricing model
 * __macro__: based on materials from Advanced Macroeconomics I taught by Professor Dr. Marten Hillebrand
-  * `models/bnc.py`: a class for simulating a basic new classical model
+  * `models/new_classical.py`: a class for simulating basic and stochastic new classical models
   * `models/monetary.py`: a class for simulating monetary dynamics under different policy scenarios
-  * `bnc_dash`: script for running a plotly dashboard to visualize the basic new classical model
-  * `bnc_dash`: script for running a plotly dashboard to visualize monetary dynamics
+  * `new_classical.py`: script for running a plotly dashboard to visualize basic and stochastic new classical models
+  * `monetary_dash.py`: script for running a plotly dashboard to visualize monetary dynamics
   * `prod_and_utility.py`: a script for generating plots to demonstrate effects of changing parameters on production, utility from consumption, and disutility from labor in a basic new classical model 
   * `fred.py`: functions for retrieving data from FRED API
